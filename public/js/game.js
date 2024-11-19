@@ -87,26 +87,28 @@ class GameScene extends Phaser.Scene {
     create() {
         this.physics.world.setBounds(0, 0, 1600, 1200);
         
-        // Add scrolling map
         this.map = this.add.image(0, 0, 'map')
             .setOrigin(0, 0)
             .setDisplaySize(1600, 1200);
 
-        this.deployZone = this.add.sprite(100, 300, 'startBlock')
-            .setScrollFactor(0)
+        this.deployZone = this.add.sprite(100, 1100, 'startBlock')
+            .setOrigin(0.5, 0.5)
             .setInteractive();
 
         this.cameras.main.setBounds(0, 0, 1600, 1200);
+        this.cameras.main.scrollX = 0;
+        this.cameras.main.scrollY = 600;
 
         this.add.text(10, 10, 'Click to deploy drone\nArrow keys to move\nSpace to shoot', {
             fontSize: '16px',
             fill: '#ffffff'
         }).setScrollFactor(0);
 
-        this.deployZone.on('pointerdown', (pointer) => {
+        this.deployZone.on('pointerdown', () => {
             if (this.deployMode && !this.drone) {
-                this.createDrone(pointer.x, pointer.y);
+                this.createDrone(100, 1100);
                 this.deployMode = false;
+                this.deployZone.destroy();
             }
         });
 
@@ -141,7 +143,6 @@ class GameScene extends Phaser.Scene {
             energy: 100
         };
 
-        // Add camera follow
         this.cameras.main.startFollow(this.drone, true, 0.09, 0.09);
     }
 
@@ -164,7 +165,7 @@ class GameScene extends Phaser.Scene {
 
             const laser = this.physics.add.sprite(startX, startY, 'laser');
             
-            const laserScale = 1.5;
+            const laserScale = 0.375;
             laser.setScale(laserScale);
 
             const speed = 500;
