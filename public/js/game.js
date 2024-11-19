@@ -1,31 +1,108 @@
-class DeployScene extends Phaser.Scene {
+class StartScene extends Phaser.Scene {
     constructor() {
-        super('DeployScene');
+        super('StartScene');
+    }
+
+    preload() {
+        this.load.image('background', 'assets/background.png');
+        this.load.image('drone', 'assets/drone.png');
+        this.load.image('laser', 'assets/laser.png');
+        this.load.image('startBlock', 'assets/StartBlock.png');
+    }
+
+    create() {
+        if (!this.textures.exists('background')) {
+            const graphics = this.add.graphics();
+            const gradient = graphics.createLinearGradient(0, 0, 0, 600);
+            gradient.addColorStop(0, '#001624');
+            gradient.addColorStop(1, '#001040');
+            graphics.fillGradientStyle(gradient);
+            graphics.fillRect(0, 0, 800, 600);
+        } else {
+            this.add.image(0, 0, 'background').setOrigin(0);
+        }
+
+        this.add.text(400, 100, 'CITY DEFENSE', {
+            fontSize: '48px',
+            fontFamily: 'Arial',
+            color: '#00ffff',
+            stroke: '#003333',
+            strokeThickness: 6,
+            shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 5, fill: true }
+        }).setOrigin(0.5);
+
+        this.createButton(400, 300, 'PLAY', () => {
+            this.cameras.main.fade(500, 0, 0, 0);
+            this.time.delayedCall(500, () => this.scene.start('GameScene'));
+        });
+
+        this.createButton(400, 400, 'MENU', () => {
+            console.log('Menu clicked');
+        });
+    }
+
+    createButton(x, y, text, callback) {
+        const button = this.add.container(x, y);
+        const bg = this.add.rectangle(0, 0, 200, 60, 0x000000, 0.8)
+            .setStrokeStyle(2, 0x00ffff);
+        const buttonText = this.add.text(0, 0, text, {
+            fontSize: '32px',
+            color: '#00ffff'
+        }).setOrigin(0.5);
+
+        button.add([bg, buttonText]);
+        button.setSize(200, 60);
+        button.setInteractive();
+
+        button.on('pointerover', () => {
+            bg.setStrokeStyle(3, 0x00ffff);
+            buttonText.setScale(1.1);
+        });
+
+        button.on('pointerout', () => {
+            bg.setStrokeStyle(2, 0x00ffff);
+            buttonText.setScale(1);
+        });
+
+        button.on('pointerdown', callback);
+    }
+}
+
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super('GameScene');
         this.deployMode = true;
         this.drone = null;
-        this.deployZone = null;
         this.lastFired = 0;
         this.fireRate = 200;
     }
 
     preload() {
-        // Load sprites from assets folder
+        this.load.image('startBlock', 'assets/StartBlock.png');
         this.load.image('drone', 'assets/drone.png');
         this.load.image('laser', 'assets/laser.png');
+        this.load.image('map', 'assets/map.png');
     }
 
     create() {
-        // Create deployment zone
-        this.deployZone = this.add.rectangle(100, 300, 200, 150, 0x666666, 0.5);
-        this.deployZone.setInteractive();
+        this.physics.world.setBounds(0, 0, 1600, 1200);
+        
+        // Add scrolling map
+        this.map = this.add.image(0, 0, 'map')
+            .setOrigin(0, 0)
+            .setDisplaySize(1600, 1200);
 
-        // Instructions text
-        this.add.text(10, 10, 'Click in gray zone to deploy drone\nArrow keys to move\nSpace to shoot', {
-            font: '16px Arial',
+        this.deployZone = this.add.sprite(100, 300, 'startBlock')
+            .setScrollFactor(0)
+            .setInteractive();
+
+        this.cameras.main.setBounds(0, 0, 1600, 1200);
+
+        this.add.text(10, 10, 'Click to deploy drone\nArrow keys to move\nSpace to shoot', {
+            fontSize: '16px',
             fill: '#ffffff'
-        });
+        }).setScrollFactor(0);
 
-        // Handle deployment click
         this.deployZone.on('pointerdown', (pointer) => {
             if (this.deployMode && !this.drone) {
                 this.createDrone(pointer.x, pointer.y);
@@ -33,113 +110,117 @@ class DeployScene extends Phaser.Scene {
             }
         });
 
-        // Set up controls
         this.cursors = this.input.keyboard.createCursorKeys();
-
-        // Create group for lasers
         this.lasers = this.add.group();
+        this.setupUI();
+    }
+
+    setupUI() {
+        this.healthText = this.add.text(10, 550, 'Health: 100', {
+            fontSize: '16px',
+            fill: '#ffffff'
+        }).setScrollFactor(0);
+
+        this.energyText = this.add.text(10, 570, 'Energy: 100', {
+            fontSize: '16px',
+            fill: '#ffffff'
+        }).setScrollFactor(0);
     }
 
     createDrone(x, y) {
         this.drone = this.physics.add.sprite(x, y, 'drone');
+        this.drone.setOrigin(0.5, 1);
         this.drone.setCollideWorldBounds(true);
-        
-        // Scale drone to be about half the size of deploy zone (200x150)
-        const targetWidth = 100; // Half of deploy zone width
+
+        const targetWidth = 100;
         const scaleRatio = targetWidth / this.drone.width;
         this.drone.setScale(scaleRatio);
-        
-        // Add drag to make movement smoother
-        this.drone.setDamping(true);
-        this.drone.setDrag(0.95);
-        
-        // Add drone stats
+
         this.drone.data = {
             health: 100,
             energy: 100
         };
 
-        // Add UI for drone stats
-        this.healthText = this.add.text(10, 550, `Health: ${this.drone.data.health}`, {
-            font: '16px Arial',
-            fill: '#ffffff'
-        });
-        this.energyText = this.add.text(10, 570, `Energy: ${this.drone.data.energy}`, {
-            font: '16px Arial',
-            fill: '#ffffff'
-        });
+        // Add camera follow
+        this.cameras.main.startFollow(this.drone, true, 0.09, 0.09);
     }
 
     fireLaser() {
         const time = this.time.now;
         if (time > this.lastFired) {
-            // Position laser at bottom of drone
-            const laser = this.physics.add.sprite(
-                this.drone.x, 
-                this.drone.y + (this.drone.displayHeight / 3), 
-                'laser'
+            const mouseX = this.input.x + this.cameras.main.scrollX;
+            const mouseY = this.input.y + this.cameras.main.scrollY;
+
+            const angle = Phaser.Math.Angle.Between(
+                this.drone.x,
+                this.drone.y,
+                mouseX,
+                mouseY
             );
+
+            const droneRadius = this.drone.displayHeight / 2;
+            const startX = this.drone.x + Math.cos(angle) * droneRadius;
+            const startY = this.drone.y + Math.sin(angle) * droneRadius;
+
+            const laser = this.physics.add.sprite(startX, startY, 'laser');
             
-            // Scale laser to be 1/8 of drone size
-            const laserScale = (this.drone.displayWidth / 8) / laser.width;
+            const laserScale = 1.5;
             laser.setScale(laserScale);
-            
-            laser.setVelocityX(400);
-            
-            // Remove laser after 1.5 seconds
-            this.time.delayedCall(1500, () => {
-                laser.destroy();
-            });
+
+            const speed = 500;
+            laser.setVelocity(
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed
+            );
+            laser.setRotation(angle);
+
+            this.time.delayedCall(2000, () => laser.destroy());
 
             this.lastFired = time + this.fireRate;
-            
-            // Decrease energy on fire
             this.drone.data.energy = Math.max(0, this.drone.data.energy - 2);
             this.updateUI();
         }
     }
 
     updateUI() {
-        if (this.drone) {
-            this.healthText.setText(`Health: ${Math.floor(this.drone.data.health)}`);
-            this.energyText.setText(`Energy: ${Math.floor(this.drone.data.energy)}`);
-        }
+        this.healthText.setText(`Health: ${Math.floor(this.drone.data.health)}`);
+        this.energyText.setText(`Energy: ${Math.floor(this.drone.data.energy)}`);
     }
 
     update() {
         if (this.drone) {
-            // Calculate velocity based on input
-            let velocityX = 0;
-            let velocityY = 0;
-            const speed = 160;
+            const speed = 200;
 
             if (this.cursors.left.isDown) {
-                velocityX = -speed;
+                this.drone.setVelocityX(-speed);
             } else if (this.cursors.right.isDown) {
-                velocityX = speed;
+                this.drone.setVelocityX(speed);
+            } else {
+                this.drone.setVelocityX(0);
             }
 
             if (this.cursors.up.isDown) {
-                velocityY = -speed;
+                this.drone.setVelocityY(-speed);
             } else if (this.cursors.down.isDown) {
-                velocityY = speed;
+                this.drone.setVelocityY(speed);
+            } else {
+                this.drone.setVelocityY(0);
             }
 
-            // Apply diagonal movement correction
-            if (velocityX !== 0 && velocityY !== 0) {
-                velocityX *= 0.707;
-                velocityY *= 0.707;
-            }
+            const mouseX = this.input.x + this.cameras.main.scrollX;
+            const mouseY = this.input.y + this.cameras.main.scrollY;
+            const angle = Phaser.Math.Angle.Between(
+                this.drone.x,
+                this.drone.y,
+                mouseX,
+                mouseY
+            );
+            this.drone.setRotation(angle + Math.PI / 2);
 
-            // Set velocity
-            this.drone.setVelocity(velocityX, velocityY);
-
-            // Handle shooting
             if (this.cursors.space.isDown && this.drone.data.energy > 0) {
                 this.fireLaser();
             }
 
-            // Regenerate energy when not firing
             if (!this.cursors.space.isDown) {
                 this.drone.data.energy = Math.min(100, this.drone.data.energy + 0.1);
                 this.updateUI();
@@ -147,7 +228,7 @@ class DeployScene extends Phaser.Scene {
         }
     }
 }
- //aa
+
 const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -159,7 +240,7 @@ const config = {
             debug: false
         }
     },
-    scene: DeployScene
+    scene: [StartScene, GameScene]
 };
 
 const game = new Phaser.Game(config);

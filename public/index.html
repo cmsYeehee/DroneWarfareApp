@@ -3,21 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City Defense MVP</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+    <title>City Defense Game</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
+            background-color: #000;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        #game {
+            border: 2px solid #333;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        .game-container {
+            position: relative;
+        }
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 24px;
+            z-index: 100;
         }
     </style>
+    <!-- Phaser Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
 </head>
 <body>
-    <div id="game"></div>
+    <div class="game-container">
+        <div id="game"></div>
+        <div class="loading-screen" id="loading">Loading...</div>
+    </div>
+
+    <!-- Game Scripts -->
+    <script>
+        // Remove loading screen when game loads
+        window.onload = function() {
+            document.getElementById('loading').style.display = 'none';
+        };
+    </script>
     <script src="js/game.js"></script>
 </body>
 </html>
