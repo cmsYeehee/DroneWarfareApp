@@ -134,7 +134,6 @@ class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.setupUI();
 
-        // Only check collisions between specific groups
         this.physics.add.overlap(this.droneLasers, this.turrets, this.hitTurret, null, this);
     }
 
@@ -168,7 +167,7 @@ class GameScene extends Phaser.Scene {
 
     startTurretFiring() {
         this.time.addEvent({
-            delay: 1000,
+            delay: 2000, // Changed from 1000 to 2000
             callback: this.turretsFire,
             callbackScope: this,
             loop: true
@@ -186,7 +185,7 @@ class GameScene extends Phaser.Scene {
                 turret.y <= cameraView.y + cameraView.height) {
                 
                 const time = this.time.now;
-                if (time > turret.lastFired + 1000) {
+                if (time > turret.lastFired + 2000) {
                     const angle = Phaser.Math.Angle.Between(
                         turret.x, turret.y,
                         this.drone.x, this.drone.y
@@ -194,10 +193,10 @@ class GameScene extends Phaser.Scene {
 
                     const laser = this.physics.add.sprite(turret.x, turret.y, 'laser2');
                     this.turretLasers.add(laser);
-                    laser.setScale(0.375);
+                    laser.setScale(0.2);
                     laser.setTint(0xff0000);
 
-                    const speed = 300;
+                    const speed = 150;
                     laser.setVelocity(
                         Math.cos(angle) * speed,
                         Math.sin(angle) * speed
@@ -365,7 +364,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 0 },
-            debug: true // Enabled debug mode to see physics bodies
+            debug: true
         }
     },
     scene: [StartScene, GameScene]
