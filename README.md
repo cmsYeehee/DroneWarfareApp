@@ -12,9 +12,16 @@ Player: Incorporates the spawning of the player drone and controlling that one d
 game: Runs the game and background, implementing the scrolling screen mechanic and the spawn area of the map.
 
 What needs to continue to be worked on:
-Please implement adding drone2 in the assets folder so that the player can place multiple drones or play as two of the different drones
 
-Adding a game over screen drone has been destroyed or a victory screen when all turrets on the map are destroyed
+Please implement adding drone2 in the assets folder so that the player can place multiple drones or play different drones. This should be updated by creating a new class, called the AI drone class which makes the non-player drones have AI. Currently, only one drone can be placed, and I want multiple drones to be allowed to be placed and AI behavior specified in the techSpec to be operational for those other drones.
 
-Adding AI to other vehicles you can place. Currently, only one drone can be placed, and I want multiple drones to be allowed to be placed and AI behavior specified in the techSpec to be operational for those other drones.
+To restate what I want to be worked on
+
+1. Changing starting area so multiple drones can be placed, up to 3 drones. Add a start button the player clicks to initiate the game now, rather than just slicking on the deployment area
+2. Giving the player the two options to place down the two different types of drones
+3. Adding AI to the non-player controlled drones, the player drone will be the first drone placed down. This AI behavior is specified as follows. Should look for the nearest turret as fire at it while rotating clockwise slowly around that target.
+
+
+Adding a game over screen drone has been destroyed or a victory screen when all turrets on the map are destroyed.
+
 
