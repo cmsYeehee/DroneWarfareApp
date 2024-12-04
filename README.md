@@ -1,6 +1,9 @@
 # DroneWarfareApp
 Here is what has been completed so far.
-    The program uses phaser as it engine, but you do not need to download any packages or outside resources to get the game running
+    The program uses phaser as it engine, you don't need to download anything, you can either doload or link it in code using 
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+
+
 Visual textures have been added to the game in the assets class
 
 So far, Three classes have been made, the Turret, Player and game classes
