@@ -1,11 +1,13 @@
 class StartScene extends Phaser.Scene {
     constructor() {
         super('StartScene');
+        this.selectedDrone = null;
     }
 
     preload() {
         this.load.image('background', 'assets/background.png');
         this.load.image('drone', 'assets/drone.png');
+        this.load.image('drone2', 'assets/drone2.png'); // Add the new drone asset
         this.load.image('laser', 'assets/laser.png');
         this.load.image('startBlock', 'assets/StartBlock.png');
     }
@@ -31,40 +33,67 @@ class StartScene extends Phaser.Scene {
             shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 5, fill: true }
         }).setOrigin(0.5);
 
-        this.createButton(400, 300, 'PLAY', () => {
-            this.cameras.main.fade(500, 0, 0, 0);
-            this.time.delayedCall(500, () => this.scene.start('GameScene'));
+        this.add.text(400, 200, 'Choose Your Drone', {
+            fontSize: '32px',
+            fontFamily: 'Arial',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+
+        // Drone 1 selection button
+        this.createDroneButton(250, 300, 'drone', () => {
+            this.selectedDrone = 'drone';
+            this.startGame();
         });
 
-        this.createButton(400, 400, 'MENU', () => {
-            console.log('Menu clicked');
+        // Drone 2 selection button
+        this.createDroneButton(550, 300, 'drone2', () => {
+            this.selectedDrone = 'drone2';
+            this.startGame();
         });
     }
 
-    createButton(x, y, text, callback) {
+    createDroneButton(x, y, droneType, callback) {
         const button = this.add.container(x, y);
-        const bg = this.add.rectangle(0, 0, 200, 60, 0x000000, 0.8)
+        
+        // Background rectangle
+        const bg = this.add.rectangle(0, 0, 200, 200, 0x000000, 0.6)
             .setStrokeStyle(2, 0x00ffff);
-        const buttonText = this.add.text(0, 0, text, {
-            fontSize: '32px',
+        
+        // Drone preview
+        const dronePreview = this.add.image(0, -30, droneType);
+        dronePreview.setScale(0.1);
+        
+        // Drone name text
+        const buttonText = this.add.text(0, 80, droneType.charAt(0).toUpperCase() + droneType.slice(1), {
+            fontSize: '24px',
             color: '#00ffff'
         }).setOrigin(0.5);
 
-        button.add([bg, buttonText]);
-        button.setSize(200, 60);
+        button.add([bg, dronePreview, buttonText]);
+        button.setSize(200, 200);
         button.setInteractive();
 
         button.on('pointerover', () => {
             bg.setStrokeStyle(3, 0x00ffff);
-            buttonText.setScale(1.1);
+            dronePreview.setScale(0.2);
         });
 
         button.on('pointerout', () => {
             bg.setStrokeStyle(2, 0x00ffff);
-            buttonText.setScale(1);
+            dronePreview.setScale(0.1);
         });
 
         button.on('pointerdown', callback);
+    }
+
+    startGame() {
+        if (this.selectedDrone) {
+            // Pass the selected drone type to the GameScene
+            this.cameras.main.fade(500, 0, 0, 0);
+            this.time.delayedCall(500, () => {
+                this.scene.start('GameScene', { selectedDrone: this.selectedDrone });
+            });
+        }
     }
 }
 
@@ -144,11 +173,24 @@ class GameScene extends Phaser.Scene {
         this.lastFired = 0;
         this.fireRate = 200;
         this.turrets = null;
+        this.selectedDrone = 'drone'; // default
     }
 
+    init(data) {
+        // Get the selected drone type from the StartScene
+        if (data.selectedDrone) {
+            this.selectedDrone = data.selectedDrone;
+        }
+    }
+
+
     preload() {
-        this.load.image('startBlock', 'assets/startBlock.png');
+        // Ensure both drone types are loaded
         this.load.image('drone', 'assets/drone.png');
+        this.load.image('drone2', 'assets/drone2.png');
+        
+        // Load other assets as before
+        this.load.image('startBlock', 'assets/startBlock.png');
         this.load.image('laser', 'assets/laser.png');
         this.load.image('laser2', 'assets/laser2.png');
         this.load.image('map', 'assets/map.png');
@@ -323,7 +365,7 @@ class GameScene extends Phaser.Scene {
     }
 
     createDrone(x, y) {
-        this.drone = this.physics.add.sprite(x, y, 'drone');
+        this.drone = this.physics.add.sprite(x, y, this.selectedDrone);
         this.drone.setOrigin(0.5, 1);
         this.drone.setCollideWorldBounds(true);
         
