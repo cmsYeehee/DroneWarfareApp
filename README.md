@@ -18,9 +18,14 @@ What needs to continue to be worked on:
 
 Please implement adding drone2 in the assets folder so that the player can place multiple drones or play different drones. This should be updated by creating a new class, called the AI drone class which makes the non-player drones have AI. Currently, only one drone can be placed, and I want multiple drones to be allowed to be placed and AI behavior specified in the techSpec to be operational for those other drones.
 
+
+
 To restate what I want to be worked on
 
 1. Changing starting area so multiple drones can be placed, up to 3 drones. Add a start button the player clicks to initiate the game now, rather than just slicking on the deployment area
+
+Drone2 asset has been made and now is selectable. multiple drone feature still needs to be worked on.
+
 2. Giving the player the two options to place down the two different types of drones
 3. Adding AI to the non-player controlled drones, the player drone will be the first drone placed down. This AI behavior is specified as follows. Should look for the nearest turret as fire at it while rotating clockwise slowly around that target.
 
