@@ -290,14 +290,18 @@ class GameScene extends Phaser.Scene {
         this.deployZone = this.add.sprite(100, 1100, 'startBlock')
             .setOrigin(0.5, 0.5)
             .setInteractive();
-
+    
         this.deployZone.on('pointerdown', () => {
+            console.log('Deploy clicked. Current count:', this.deployCount, 'Max:', this.maxDrones);
             if (!this.gameStarted && this.deployCount < this.maxDrones) {
                 this.deployDrone(100, 1100, this.deployCount);
                 this.deployCount++;
+                console.log('Drone deployed. New count:', this.deployCount);
+            } else {
+                console.log('Cannot deploy: gameStarted=', this.gameStarted, 'deployCount=', this.deployCount);
             }
         });
-        
+            
         // Create a "BEGIN" button to start the game after placing drones
         this.beginButton = this.add.text(200, 1100, 'BEGIN', {
             fontSize: '24px',
@@ -305,10 +309,14 @@ class GameScene extends Phaser.Scene {
             backgroundColor: '#000000',
             padding: { x: 10, y: 5 }
         }).setOrigin(0.5, 0.5).setInteractive();
-
+    
         this.beginButton.on('pointerdown', () => {
+            console.log('Begin clicked. Drone count:', this.deployCount);
             if (this.deployCount > 0) { 
                 this.startGame();
+                console.log('Game started');
+            } else {
+                console.log('Cannot start: No drones deployed');
             }
         });
     }
@@ -345,6 +353,7 @@ class GameScene extends Phaser.Scene {
     }
 
     setupAIDrone(drone) {
+        console.log('Setting up AI drone');
         drone.setOrigin(0.5, 1);
         drone.setCollideWorldBounds(true);
     
@@ -356,11 +365,39 @@ class GameScene extends Phaser.Scene {
         const droneHeight = drone.displayHeight * 5;
         drone.body.setSize(droneWidth, droneHeight);
     
+        console.log('Setting drone properties');
         drone.health = 50;
         drone.energy = 100;
         drone.isAI = true;
     
-        drone.aiController = new AIDrone(this, drone);
+        console.log('Creating AI controller');
+        try {
+            drone.aiController = new AIDrone(this, drone);
+            console.log('AI controller created successfully:', drone.aiController);
+            
+            // Verify AIDrone methods are accessible
+            if (drone.aiController.update && drone.aiController.findNearestTurret) {
+                console.log('AI controller methods verified');
+            } else {
+                console.error('AI controller missing required methods');
+            }
+        } catch (error) {
+            console.error('Error creating AI controller:', error);
+        }
+    
+        if (!drone.aiController) {
+            console.error('Failed to create AI controller');
+            return;
+        }
+    
+        // Log initial position and properties
+        console.log('AI Drone setup complete:', {
+            position: { x: drone.x, y: drone.y },
+            scale: drone.scale,
+            bodySize: { width: droneWidth, height: droneHeight },
+            health: drone.health,
+            energy: drone.energy
+        });
     }
 
     startGame() {
