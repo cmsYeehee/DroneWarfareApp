@@ -1,4 +1,5 @@
 // AIDrone.js
+
 class AIDrone {
     constructor(scene, sprite) {
         this.scene = scene;
@@ -6,82 +7,86 @@ class AIDrone {
         this.targetTurret = null;
         this.fireRate = 2000; // Slower firing rate
         this.lastFired = 0;
-        this.fireDistance = 200;
+        this.fireDistance = 50;
     }
 
     update() {
-        if (!this.sprite || this.sprite.data.health <= 0) return;
-
-        // Find nearest turret if none selected or turret destroyed
+        // Instead of this.sprite.data.health, use this.sprite.health
+        if (!this.sprite || this.sprite.health <= 0) return;
+    
         if (!this.targetTurret || !this.targetTurret.active) {
             this.targetTurret = this.findNearestTurret();
         }
-
-        if (this.targetTurret) {
-            this.moveAndAttackTarget();
+    
+        if (!this.targetTurret) {
+            this.sprite.setVelocity(0, 0);
+            return;
         }
-
-        // Regenerate energy if not firing
-        if (this.sprite.data.energy < 100 && !this.isFiring) {
-            this.sprite.data.energy = Math.min(100, this.sprite.data.energy + 0.1);
-        }
+    
+        this.moveAndAttackTarget();
     }
 
     findNearestTurret() {
         let nearest = null;
         let nearestDist = Infinity;
+    
         this.scene.turrets.getChildren().forEach(turret => {
+            if (!turret.active) return;
             const dist = Phaser.Math.Distance.Between(
                 this.sprite.x, this.sprite.y,
                 turret.x, turret.y
             );
+    
             if (dist < nearestDist) {
                 nearestDist = dist;
                 nearest = turret;
             }
         });
+    
         return nearest;
     }
 
     moveAndAttackTarget() {
+        if (!this.targetTurret || !this.targetTurret.active) return;
+
+        this.fireDistance = 200;
+        const stopDistance = this.fireDistance - 50;
+
         const dist = Phaser.Math.Distance.Between(
             this.sprite.x,
             this.sprite.y,
             this.targetTurret.x,
             this.targetTurret.y
         );
-    
-        // Always face the turret
+
         const angle = Phaser.Math.Angle.Between(
             this.sprite.x,
             this.sprite.y,
             this.targetTurret.x,
             this.targetTurret.y
         );
+
         this.sprite.setRotation(angle + Math.PI / 2);
-    
-        const time = this.scene.time.now;
-    
-        if (dist < this.fireDistance) {
-            // Close enough to fire: Stop moving
+
+        if (dist < stopDistance) {
             this.sprite.setVelocity(0, 0);
-    
-            // Fire if allowed
-            if (time > this.lastFired && this.sprite.data.energy > 0) {
-                this.fireLaserAtTurret(this.targetTurret);
-                this.lastFired = time + this.fireRate;
-                this.sprite.data.energy = Math.max(0, this.sprite.data.energy - 2);
+            if (dist < this.fireDistance) {
+                const time = this.scene.time.now;
+                // Use this.sprite.energy here, not this.sprite.data.energy
+                if (time > this.lastFired && this.sprite.energy > 0) {
+                    this.fireLaserAtTurret(this.targetTurret);
+                    this.lastFired = time + this.fireRate;
+                    this.sprite.energy = Math.max(0, this.sprite.energy - 2);
+                }
             }
         } else {
-            // Not close enough: move closer
-            const speed = 10; 
+            const speed = 100; 
             this.sprite.setVelocity(
                 Math.cos(angle) * speed,
                 Math.sin(angle) * speed
             );
         }
     }
-    
 
     fireLaserAtTurret(turret) {
         const angle = Phaser.Math.Angle.Between(
@@ -102,7 +107,7 @@ class AIDrone {
         laser.setScale(laserScale);
         laser.body.setSize(20, 4);
 
-        const speed = 5;
+        const speed = 300;
         laser.setVelocity(
             Math.cos(angle) * speed,
             Math.sin(angle) * speed
