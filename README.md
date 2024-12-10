@@ -23,13 +23,18 @@ Please implement adding drone2 in the assets folder so that the player can place
 To restate what I want to be worked on
 
 1. Changing starting area so multiple drones can be placed, up to 3 drones. Add a start button the player clicks to initiate the game now, rather than just slicking on the deployment area
+- feature added
 
 Drone2 asset has been made and now is selectable. multiple drone feature still needs to be worked on.
 
 2. Giving the player the two options to place down the two different types of drones
+-feature added
 3. Adding AI to the non-player controlled drones, the player drone will be the first drone placed down. This AI behavior is specified as follows. Should look for the nearest turret as fire at it while rotating clockwise slowly around that target.
+- feature added, yet clockwise feature was unrealiable so we just made it wait in front of the turret. 
 
 
 Adding a game over screen drone has been destroyed or a victory screen when all turrets on the map are destroyed.
+
+new updates shown in MVP.md file
 
 
